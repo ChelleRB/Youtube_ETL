@@ -1,7 +1,6 @@
 import requests
 import json
 from datetime import date
-
 import os #needed for dotenv file which has the API key
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=".env") #load the .env file
@@ -9,7 +8,6 @@ load_dotenv(dotenv_path=".env") #load the .env file
 API_KEY = os.getenv("API_KEY") #this gets the api key
 CHANNEL_HANDLE = "ComedyBites"
 maxResults = 50
-#playlist = UUGfUuxBzB8E30XjCjOvji2w
 
 def get_playlist_id():
 
