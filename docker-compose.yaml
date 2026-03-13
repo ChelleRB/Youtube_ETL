@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
- 
+
 # Basic Airflow cluster configuration for CeleryExecutor with Redis and PostgreSQL.
 #
 # WARNING: This configuration is for local development. Do not use it in a production deployment.
@@ -44,17 +44,14 @@
 #
 # Feel free to modify this file to suit your needs.
 ---
-x-airflow-common:
-  &airflow-common
+x-airflow-common: &airflow-common
   # Use custom image that builds on top of default airflow image (currently; Default: apache/airflow:2.9.2)
   # Image stored on Dockerhub
   image: ${DOCKERHUB_NAMESPACE}/${DOCKERHUB_REPOSITORY}:${IMAGE_TAG}
   # Use the .env file to read the connection params and variables - SWITCH THIS OFF WHEN USING GITHUB ACTIONS
   env_file:
     - .env
-  environment:
-    &airflow-common-env
-    # Set executor to CeleryExecutor 
+  environment: &airflow-common-env # Set executor to CeleryExecutor
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     # Use SQLAlchemy to connect to Airflow's metadata Postgres database using the psycopg2 driver
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${METADATA_DATABASE_USERNAME}:${METADATA_DATABASE_PASSWORD}@${POSTGRES_CONN_HOST}:${POSTGRES_CONN_PORT}/${METADATA_DATABASE_NAME}
@@ -65,23 +62,23 @@ x-airflow-common:
     # Key for encrypting data
     AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY}
     # New DAGs are paused by default
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     # Set to false to remove default DAGs - https://stackoverflow.com/questions/43410836/how-to-remove-default-example-dags-in-airflow
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     # Configure authentication backends. Enable basic & session-based authentication
-    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
     # Enable health checks for the scheduler
-    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
     # Setting Airflow Connections and Variables
-    # NOTE 1: These will not show up on Airflow UI or using airflow connections/ variables list 
+    # NOTE 1: These will not show up on Airflow UI or using airflow connections/ variables list
     # However, functions such as Variable.get() will still work as per Airflow docs as long as
     # the variable starts with AIRFLOW_VAR_- https://airflow.apache.org/docs/apache-airflow/stable/howto/variable.html#storing-variables-in-environment-variables
     # NOTE 2: Single underscores are used for Airflow to read connections/ variables
-    # Connection can be written as URI: 
+    # Connection can be written as URI:
     # AIRFLOW_CONN_{CONN_ID}='my-conn-type://login:password@host:port/schema?param1=val1&param2=val2'
     # Connection to an external PostgreSQL database needed to store the data from the ELT process
-    AIRFLOW_CONN_POSTGRES_DB_YT_ELT: 'postgresql://${ELT_DATABASE_USERNAME}:${ELT_DATABASE_PASSWORD}@${POSTGRES_CONN_HOST}:${POSTGRES_CONN_PORT}/${ELT_DATABASE_NAME}'
-    # Variables can be written as follows: 
+    AIRFLOW_CONN_POSTGRES_DB_YT_ELT: "postgresql://${ELT_DATABASE_USERNAME}:${ELT_DATABASE_PASSWORD}@${POSTGRES_CONN_HOST}:${POSTGRES_CONN_PORT}/${ELT_DATABASE_NAME}"
+    # Variables can be written as follows:
     # AIRFLOW_VAR_{VARIABLE_NAME}
     AIRFLOW_VAR_API_KEY: ${API_KEY}
     AIRFLOW_VAR_CHANNEL_HANDLE: ${CHANNEL_HANDLE}
@@ -100,13 +97,12 @@ x-airflow-common:
     - ./plugins:/opt/airflow/plugins
     - ./tests:/opt/airflow/tests
   user: "${AIRFLOW_UID}:0"
-  depends_on:
-    &airflow-common-depends-on
+  depends_on: &airflow-common-depends-on
     redis:
       condition: service_healthy
     postgres:
       condition: service_healthy
- 
+
 services:
   postgres:
     container_name: postgres
@@ -118,7 +114,7 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_CONN_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_CONN_PASSWORD}
-    #   - METADATA_DATABASE_NAME=${METADATA_DATABASE_NAME}
+      - METADATA_DATABASE_NAME=${METADATA_DATABASE_NAME}
     #   - METADATA_DATABASE_USERNAME=${METADATA_DATABASE_USERNAME}
     #   - METADATA_DATABASE_PASSWORD=${METADATA_DATABASE_PASSWORD}
     #   - ELT_DATABASE_NAME=${ELT_DATABASE_NAME}
@@ -130,18 +126,26 @@ services:
     #   - POSTGRES_CONN_HOST=${POSTGRES_CONN_HOST}
     #   - POSTGRES_CONN_PORT=${POSTGRES_CONN_PORT}
     ports:
-      - 5432:5432
+      - 5432:5432 #laptop: port inside docker container
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
       - ./docker/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
     # Test connection to 1 of 3 dbs, the metadata db in this case
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_CONN_USERNAME}", "-d", "${METADATA_DATABASE_NAME}"]
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${POSTGRES_CONN_USERNAME}",
+          "-d",
+          "${METADATA_DATABASE_NAME}",
+        ]
       interval: 10s
       retries: 5
       start_period: 5s
     restart: always
- 
+
   redis:
     # Redis is limited to 7.2-bookworm due to licencing change
     # https://redis.io/blog/redis-adopts-dual-source-available-licensing/
@@ -156,7 +160,7 @@ services:
       retries: 50
       start_period: 30s
     restart: always
- 
+
   airflow-webserver:
     <<: *airflow-common
     command: webserver
@@ -174,7 +178,7 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
- 
+
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
@@ -190,7 +194,7 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
- 
+
   airflow-worker:
     <<: *airflow-common
     command: celery worker
@@ -213,7 +217,7 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
- 
+
   # airflow-triggerer:
   #   <<: *airflow-common
   #   command: triggerer
@@ -229,7 +233,7 @@ services:
   #     <<: *airflow-common-depends-on
   #     airflow-init:
   #       condition: service_completed_successfully
- 
+
   airflow-init:
     <<: *airflow-common
     entrypoint: /bin/bash
@@ -285,14 +289,14 @@ services:
     # yamllint enable rule:line-length
     environment:
       <<: *airflow-common-env
-      _AIRFLOW_DB_MIGRATE: 'true'
-      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
       _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_WWW_USER_USERNAME}
       _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_WWW_USER_PASSWORD}
     user: "0:0"
     volumes:
       - .:/sources
- 
+
   airflow-cli:
     <<: *airflow-common
     profiles:
@@ -305,7 +309,7 @@ services:
       - bash
       - -c
       - airflow
- 
+
   # # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
   # # or by explicitly targeted on the command line e.g. docker-compose up flower.
   # # See: https://docs.docker.com/compose/profiles/
@@ -328,7 +332,6 @@ services:
   #     <<: *airflow-common-depends-on
   #     airflow-init:
   #       condition: service_completed_successfully
- 
+
 volumes:
   postgres-db-volume:
-
