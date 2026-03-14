@@ -1,14 +1,19 @@
 import requests
 import json
 from datetime import date
-import os #needed for dotenv file which has the API key
-from dotenv import load_dotenv
-load_dotenv(dotenv_path=".env") #load the .env file
 
-API_KEY = os.getenv("API_KEY") #this gets the api key
-CHANNEL_HANDLE = "ComedyBites"
+# import os #needed for dotenv file which has the API key
+# from dotenv import load_dotenv
+# load_dotenv(dotenv_path=".env") #load the .env file
+from airflow.decorators import task
+from airflow.models import Variable
+
+
+API_KEY = Variable.get("API_KEY") #this gets the api key
+CHANNEL_HANDLE = Variable.get("CHANNEL_HANDLE")
 maxResults = 50
 
+@task
 def get_playlist_id():
 
   try:
@@ -32,7 +37,7 @@ def get_playlist_id():
   except requests.exceptions.RequestException as e:
     raise e
   
-
+@task
 def get_video_ids(playlistId):
 
   video_ids = [] #intilized empty list first to store video ids of the channel
@@ -69,7 +74,7 @@ def get_video_ids(playlistId):
   except requests.exceptions.RequestException as e:
       raise e
 
-
+@task
 def extract_video_data(video_ids):
 
   extracted_data = []
@@ -114,6 +119,7 @@ def extract_video_data(video_ids):
   except requests.exceptions.RequestException as e:
       raise e
 
+@task
 def save_to_json(extracted_data):
     file_path = f"./data/Youtube_data_{date.today()}.json"
 
