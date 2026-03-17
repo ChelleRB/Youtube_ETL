@@ -1,7 +1,9 @@
 from airflow import DAG
 import pendulum 
 from datetime import datetime, timedelta
-from api.video_stats import get_playlist_id, get_video_ids, extract_video_data, save_to_json
+
+from api.video_stats import (get_playlist_id, get_video_ids, extract_video_data, save_to_json)
+from api.db_tasks import staging_table, core_table
 
 #Define the local timezone
 local_tz = pendulum.timezone("Europe/London")
@@ -27,12 +29,30 @@ with DAG(
      description="DAG to extract raw video data from YouTube API and save it as JSON",
      schedule='0 14 * * *', #runs every day at 2pm
      catchup=False,
- ) as dag:
+ ) as produce_json_dag:
      
      #Define tasks
      playlist_id = get_playlist_id()
      video_ids = get_video_ids(playlist_id)
      extract_data = extract_video_data(video_ids)
      save_to_json_task = save_to_json(extract_data)
+
      #Define task dependencies
      playlist_id >> video_ids >> extract_data >> save_to_json_task
+
+with DAG(
+     dag_id="update_db",
+     default_args=default_args,
+     description="DAG to process JSON file and insert data into both staging and core schema",
+     schedule='0 15 * * *', #runs every day at 3pm
+     catchup=False,
+ ) as update_db_dag:
+     
+     #Define tasks
+     update_staging = staging_table()
+     update_core = core_table()
+
+     #Define task dependencies
+     update_staging >> update_core 
+
+     

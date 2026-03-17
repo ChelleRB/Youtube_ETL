@@ -10,9 +10,9 @@ def load_path():
     
     try:
         logger.info(f"Processing the file: youtube_api_data{date.today()}")
+        
         with open(file_path, "r", encoding="utf-8") as raw_data:
             data = json.load(raw_data)
-            
         return data
     except FileNotFoundError:
         logger.error(f"File not found: {file_path}")

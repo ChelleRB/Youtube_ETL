@@ -7,6 +7,7 @@ from datetime import date
 # load_dotenv(dotenv_path=".env") #load the .env file
 from airflow.decorators import task
 from airflow.models import Variable
+from api.data_utils import create_schema, create_table
 
 
 API_KEY = Variable.get("API_KEY") #this gets the api key
@@ -115,7 +116,6 @@ def extract_video_data(video_ids):
 
     return extracted_data
 
-
   except requests.exceptions.RequestException as e:
       raise e
 
@@ -125,6 +125,19 @@ def save_to_json(extracted_data):
 
     with open(file_path, "w", encoding="utf-8") as json_outfile:
        json.dump(extracted_data, json_outfile, indent=4, ensure_ascii=False) #indent will make json file more readable
+
+#maybe???
+# @task
+# def staging_table():
+#     schema = "staging"
+#     create_schema(schema)
+#     create_table(schema)
+
+# @task
+# def core_table():
+#     schema = "core"
+#     create_schema(schema)
+#     create_table(schema)       
 
 
 if __name__ == "__main__":
