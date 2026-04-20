@@ -46,7 +46,7 @@ with DAG(
      description="DAG to process JSON file and insert data into both staging and core schema",
      schedule='0 15 * * *', #runs every day at 3pm
      catchup=False,
- ) as update_db_dag:
+ ) as dag_update:
      
      #Define tasks
      update_staging = staging_table()
@@ -55,4 +55,17 @@ with DAG(
      #Define task dependencies
      update_staging >> update_core 
 
+with DAG(
+     dag_id="data_quality",
+     default_args=default_args,
+     description="DAG to check the data quality on both layers in the db",
+     schedule='0 16 * * *', #runs at 4pm
+     catchup=False,
+ ) as dag_update:
      
+     #Define tasks
+     soda_validate_staging = youtube_elt_data_quality(staging_schema)
+     soda_validate_core = youtube_elt_data_quality(core_schema)
+
+     #Define task dependencies
+     update_staging >> update_core 
