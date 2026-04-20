@@ -1,12 +1,12 @@
-#End-to-End Data Engineering Pipeline for YouTube Analytics
+# End-to-End Data Engineering Pipeline for YouTube Analytics
 
-##1. Overview:
+**1. Overview:**
 
 This project demonstrates the design and implementation of a production-ready data pipeline covering data ingestion, transformation, orchestration, testing, and deployment using industry-standard tools. Focus is on Youtube analytics for "The Office"
 
 The primary objective is to collect raw data from an external API, process and store it in a structured data warehouse, and ensure reliability through automated workflows, testing, and CI/CD practices.
 
-##2. Architecture Summary:
+**2. Architecture Summary:**
 
 The pipeline follows an ELT (Extract, Load, Transform) architecture:
 
@@ -18,7 +18,7 @@ Containerization: Docker & Docker Compose
 Testing & Quality: Pytest + Soda (data quality checks)
 CI/CD: GitHub Actions for automated builds and deployments
 
-##3. Key Features:
+**3. Key Features:**
 -Automated ingestion of structured and semi-structured data from APIs
 -Transformation of raw JSON data into normalized warehouse tables
 -Workflow orchestration using Airflow for scheduling and monitoring
@@ -27,7 +27,7 @@ CI/CD: GitHub Actions for automated builds and deployments
 -Data quality validation using rule-based checks
 -CI/CD pipeline for continuous integration and deployment
 
-##4. Tech Stack:
+**4. Tech Stack:**
    Languages: Python, SQL
    Databases: PostgreSQL
    Orchestration: Apache Airflow
@@ -45,6 +45,6 @@ CI/CD: GitHub Actions for automated builds and deployments
    Deploy pipeline updates through CI/CD workflows
    Business Value
 
-##5. Conclusion
+**5. Conclusion:**
 
 This has been a great project to help focus on design, implementation, and maintence of a robust data engineering pipeline aligned with best practices.
